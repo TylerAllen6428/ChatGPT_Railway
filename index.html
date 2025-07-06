@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatGPT: Tyler's Version</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  
+  <style>
+  .pasted-image-preview {
+    display: inline-block;
+    max-width: 200px;
+    max-height: 100px;
+    margin: 0.25rem 0.5rem 0.25rem 0;
+    border-radius: 6px;
+    border: 1px solid #374151;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .pasted-image-container {
+    position: relative;
+    display: inline-block;
+    margin: 0.25rem 0.5rem 0.25rem 0;
+  }
+
+  .pasted-image-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Password overlay styles */
+  #passwordOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(10px);
+  }
+  
+  .password-card {
+    background: rgba(33, 33, 33, 0.95);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    backdrop-filter: blur(20px);
+  }
+  
+  .password-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .password-subtitle {
+    color: #d1d5db;
+    margin-bottom: 2rem;
+    font-size: 1rem;
+  }
+  
+  .password-input {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(17, 17, 17, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 1.1rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .password-input:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+    background: rgba(17, 17, 17, 0.9);
+  }
+  
+  .password-input::placeholder {
+    color: #9ca3af;
+    letter-spacing: normal;
+  }
+  
+  .password-button {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+  
+  .password-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  }
+  
+  .password-button:active {
+    transform: translateY(0);
+  }
+  
+  .error-message {
+    color: #ef4444;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    display: none;
+  }
+  
+  .lock-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1.5rem auto;
+    color: #60a5fa;
+    opacity: 0.8;
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  
+  .shake {
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  .main-app {
+    display: none;
+  }
+  
+  .main-app.unlocked {
+    display: flex;
+  }
+  
+  #input:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #6b7280 !important;
+    border-color: #6b7280 !important;
+  }
+  
+  #modeSelect:focus,
+  #modelSelect:focus,
+  #fileInput:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px #6b7280 !important;
+    border-color: #6b7280 !important;
+  }
+
+  #input {
+    min-height: 40px !important;
+    max-height: 200px !important;
+    height: auto !important;
+    overflow-y: auto;
+    line-height: 1.5;
+    padding: 12px !important;
+    resize: none;
+    transition: height 0.1s ease;
+  }
+  
+  .message-content pre {
+    background: #1e1e1e !important;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    margin: 1rem 0;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  
+  .code-header {
+    background: #2d2d2d;
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .code-content {
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #f8f8f2;
+    background: #1e1e1e;
+  }
+  
+  .copy-btn {
+    background: #4a5568;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+  }
+  
+  .copy-btn:hover {
+    background: #2d3748;
+    transform: translateY(-1px);
+  }
+  
+  .copy-btn.copied {
+    background: #48bb78;
+  }
+  
+  .message-content code:not(pre code) {
+    background: #2d3748;
+    color: #fbbf24;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: 'Fira Code', 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.85rem;
+    border: 1px solid #4a5568;
+  }
+  
+  .message-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #e5e7eb;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+  }
+  
+  .message-content h1 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin: 1.5em 0 0.8em 0;
+    color: #3b82f6;
+    border-bottom: 2px solid #4b5563;
+    padding-bottom: 0.5em;
+  }
+  
+  .message-content h2 {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin: 1.5em 0 0.8em 0;
+    color: #60a5fa;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 0.4em;
+  }
+  
+  .message-content h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 1.2em 0 0.6em 0;
+    color: #93c5fd;
+  }
+  
+  .message-content p {
+    margin: 0.8em 0;
+    line-height: 1.7;
+  }
+  
+  .message-content ul, .message-content ol {
+    margin: 1em 0;
+    padding-left: 1.5em;
+  }
+  
+  .message-content li {
+    margin: 0.4em 0;
+    line-height: 1.6;
+  }
+  
+  .message-content blockquote {
+    border-left: 4px solid #3b82f6;
+    margin: 1.2em 0;
+    padding: 1em 1.5em;
+    background: #1f2937;
+    border-radius: 0.5rem;
+    font-style: italic;
+    color: #d1d5db;
+  }
+  
+  .message-content strong {
+    color: #93c5fd;
+    font-weight: 600;
+  }
+  
+  .message-content em {
+    color: #fbbf24;
+    font-style: italic;
+  }
+  
+  .message-content a {
+    color: #60a5fa;
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+  
+  .message-content a:hover {
+    color: #93c5fd;
+  }
+  
+  pre{background:#2a2a2a;padding:0.5rem;border-radius:0.375rem;overflow-x:auto;margin-top:0.5rem;font-size:0.875rem;border:1px solid #363636}
+  code{font-family:Menlo,Monaco,Consolas,"Courier New",monospace;color:#e5e7eb}
+  .file-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .file-item{display:flex;align-items:center;background:#2a2a2a;padding:4px 8px;border-radius:4px;font-size:12px;max-width:150px;color:#e5e7eb}
+  .file-item .file-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:4px}
+  .file-item .remove-btn{background:#ef4444;color:white;border:none;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;line-height:1}
+  .file-item .remove-btn:hover{background:#dc2626}
+  .chat-item{transition:background-color 0.2s}
+  .chat-item:hover{background:#2a2a2a}
+  .chat-item.active{background:#2a2a2a}
+  .sidebar{transition:width 0.3s ease,transform 0.3s ease;width:256px}
+  .sidebar.collapsed{width:0;min-width:0}
+  .sidebar-content{width:256px;transition:transform 0.3s ease}
+  .sidebar.collapsed .sidebar-content{transform:translateX(-100%)}
+  .main-content{transition:margin-left 0.3s ease}
+  #fileInput::file-selector-button{background-color:#363636;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:8px}
+  #fileInput::file-selector-button:hover{background-color:#404040}
+  @media (max-width:768px){
+    .sidebar{position:fixed;z-index:50;height:100vh;width:256px!important}
+    .sidebar.collapsed{width:0!important}
+    .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40}
+    .main-content{margin-left:0!important}
+  }
+  .typing-dots{display:flex;gap:4px}
+  .typing-dots span{width:8px;height:8px;background:#9ca3af;border-radius:50%;animation:typing 1.4s infinite}
+  .typing-dots span:nth-child(2){animation-delay:0.2s}
+  .typing-dots span:nth-child(3){animation-delay:0.4s}
+  @keyframes typing{0%,60%,100%{transform:initial}30%{transform:translateY(-10px)}}
+  
+  .katex { color: #e5e7eb !important; }
+  .katex .mord { color: #e5e7eb !important; }
+  .katex .mrel { color: #93c5fd !important; }
+  .katex .mop { color: #fbbf24 !important; }
+  .katex .mbin { color: #a78bfa !important; }
+  .katex .mpunct { color: #e5e7eb !important; }
+  .katex .mopen, .katex .mclose { color: #f3f4f6 !important; }
+  .katex .accent-body { color: #e5e7eb !important; }
+  .katex .frac-line { border-bottom-color: #e5e7eb !important; }
+  .katex .sqrt > .root { color: #93c5fd !important; }
+  
+  .status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  .status-ready { background-color: #10b981; }
+  .status-loading { background-color: #f59e0b; }
+  .status-error { background-color: #ef4444; }
+  
+  .storage-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    margin-left: 0.5rem;
+  }
+  .storage-saved { background: #065f46; color: #6ee7b7; }
+  .storage-saving { background: #92400e; color: #fcd34d; }
+  .storage-error { background: #7f1d1d; color: #fca5a5; }
+  
+  .token-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    background: #1e3a8a;
+    color: #93c5fd;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .token-status:hover {
+    background: #1e40af;
+    color: #dbeafe;
+  }
+
+  .token-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .token-modal-content {
+    background: #1e1e1e;
+    border: 1px solid #404040;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #e5e7eb;
+  }
+
+  .token-modal h3 {
+    color: #60a5fa;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .token-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .token-stat {
+    background: #2a2a2a;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #404040;
+  }
+
+  .token-stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #60a5fa;
+  }
+
+  .token-stat-label {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-top: 0.5rem;
+  }
+
+  .token-history {
+    background: #2a2a2a;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .token-history h4 {
+    color: #fbbf24;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #374151;
+  }
+
+  .history-item:last-child {
+    border-bottom: none;
+  }
+
+  .reset-tokens-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin: 0.5rem 0;
+    transition: all 0.2s;
+  }
+
+  .reset-tokens-btn:hover {
+    background: #b91c1c;
+  }
+
+  .close-modal-btn {
+    background: #374151;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    float: right;
+    margin-top: 1rem;
+  }
+
+  .close-modal-btn:hover {
+    background: #4b5563;
+  }
+  </style>
+</head>
+<body class="text-gray-100 h-screen font-sans" style="background-color: #212121;">
+  
+  <!-- Password Protection Overlay -->
+  <div id="passwordOverlay">
+    <div class="password-card">
+      <svg class="lock-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+      </svg>
+      
+      <h1 class="password-title">Secure Access</h1>
+      <p class="password-subtitle">Enter password to access Tyler's ChatGPT interface</p>
+      
+      <form id="passwordForm">
+        <input 
+          type="password" 
+          id="passwordInput" 
+          class="password-input" 
+          placeholder="Enter password"
+          maxlength="50"
+          autocomplete="off"
+        />
+        <button type="submit" class="password-button">
+          🔓 Unlock Access
+        </button>
+      </form>
+      
+      <div id="errorMessage" class="error-message">
+        ❌ Incorrect password. Please try again.
+      </div>
+      
+      <div style="margin-top: 2rem; font-size: 0.8rem; color: #9ca3af;">
+        🔒 Your session will remain unlocked until you close the browser
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application -->
+  <div class="main-app flex h-screen" id="mainApp">
+    <!-- Token Usage Modal -->
+    <div id="tokenModal" class="token-modal">
+      <div class="token-modal-content">
+        <h3>📊 Token Usage Statistics</h3>
+        
+        <div class="token-stats" id="tokenStats"></div>
+        
+        <div class="token-history">
+          <h4>📈 Last 7 Days</h4>
+          <div id="tokenHistory"></div>
+        </div>
+        
+        <button class="reset-tokens-btn" onclick="tokenTracker.resetDailyTokens()">
+          🗑️ Reset Today's Counter
+        </button>
+        
+        <button class="close-modal-btn" onclick="tokenTracker.hideModal()">
+          Close
+        </button>
+      </div>
+    </div>
+    <div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+    
+    <div id="sidebar" class="sidebar flex-shrink-0 border-r" style="background-color: #171717; border-color: #363636;">
+      <div class="sidebar-content flex flex-col h-full">
+        <div class="p-4 border-b" style="border-color: #363636;">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-100">Chats</h2>
+            <button id="newChatBtn" class="hover:bg-gray-600 text-gray-100 px-3 py-1 rounded text-sm" style="background-color: #2a2a2a;">
+              + New
+            </button>
+          </div>
+        </div>
+        <div id="chatList" class="flex-1 overflow-y-auto p-2"></div>
+      </div>
+    </div>
+    
+    <div class="main-content flex-1 flex flex-col min-w-0">
+      <header class="p-4 shadow-sm flex items-center justify-between border-b" style="background-color: #212121; border-color: #363636;">
+        <div class="flex items-center gap-3">
+          <button id="sidebarToggle" class="hover:bg-gray-600 p-2 rounded text-gray-300" style="background-color: #2a2a2a;">
+            <svg id="sidebarToggleIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <h1 id="chatTitle" class="text-xl font-bold text-gray-100">New Chat</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center text-xs text-gray-400">
+            <span id="latexStatus" class="status-indicator status-loading"></span>
+            <span id="latexStatusText">Loading LaTeX...</span>
+          </div>
+          <div class="flex items-center text-xs text-gray-400">
+            <span id="backendStatus" class="status-indicator status-loading"></span>
+            <span id="backendStatusText">Checking...</span>
+          </div>
+          <div class="flex items-center text-xs text-gray-400">
+            <span id="tokenStatus" class="token-status">🔢 Loading...</span>
+          </div>
+          <div class="flex items-center text-xs text-gray-400">
+            <span id="storageStatus" class="storage-status storage-saved">💾 Saved</span>
+          </div>
+          <select id="modeSelect" class="text-gray-100 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" style="background-color: #2a2a2a; border-color: #363636;">
+            <option value="general">💬 General</option>
+            <option value="coding">🔧 Coding</option>
+            <option value="creative">🎨 Creative</option>
+            <option value="analysis">📊 Analysis</option>
+            <option value="learning">📚 Learning</option>
+          </select>
+          <select id="modelSelect" class="text-gray-100 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" style="background-color: #2a2a2a; border-color: #363636;">
+            <option value="gpt-3.5-turbo" >GPT-3.5</option>
+            <option value="gpt-4o-mini" >GPT-4o Mini</option>
+            <option value="gpt-4o" selected>GPT-4o</option>
+          </select>
+          <button id="clearBtn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm">Clear History</button>
+          <button id="lockBtn" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded text-sm" title="Lock Application">
+            🔒 Lock
+          </button>
+        </div>
+      </header>
+      
+      <main id="chat" class="flex-1 overflow-y-auto p-4 space-y-4"></main>
+      
+      <footer class="p-4 flex gap-2 items-end border-t" style="background-color: #171717; border-color: #363636;">
+        <div class="flex-1 flex flex-col gap-2">
+          <textarea id="input" class="flex-1 border text-gray-100 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-gray-500 placeholder-gray-400" style="background-color: #212121; border-color: #363636;" placeholder="Type your message..."></textarea>
+          <div class="flex gap-2 items-end">
+            <input type="file" id="fileInput" class="text-gray-100 border px-2 py-1 rounded text-sm flex-1" style="background-color: #2a2a2a; border-color: #363636;" accept="*/*" multiple />
+          </div>
+          <div id="pastedImages" class="flex flex-wrap gap-2"></div>
+          <div id="filePreview" class="file-preview"></div>
+        </div>`
+        <button id="sendBtn" class="hover:bg-green-600 text-white px-4 py-2 rounded self-end font-medium" style="background-color: #10b981;">
+          Send
+        </button>
+      </footer>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  
+  <script>
+// Optimized App with reduced redundancy
+const App = {
+  initImagePaste() {
+    const input = this.elements.input;
+    input.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) this.addPastedImage(file);
+        }
+      }
+    });
+  },
+
+  addPastedImage(file) {
+    const imageData = {
+      id: 'pasted_' + Date.now(),
+      file: file,
+      url: URL.createObjectURL(file),
+      name: file.name || `pasted-image-${Date.now()}.png`
+    };
+    this.data.pastedImages.push(imageData);
+    this.renderPastedImages();
+  },
+
+  removePastedImage(imageId) {
+    const index = this.data.pastedImages.findIndex(img => img.id === imageId);
+    if (index !== -1) {
+      URL.revokeObjectURL(this.data.pastedImages[index].url);
+      this.data.pastedImages.splice(index, 1);
+      this.renderPastedImages();
+    }
+  },
+
+  renderPastedImages() {
+    const container = document.getElementById('pastedImages');
+    if (!container) return;
+    container.innerHTML = '';
+    this.data.pastedImages.forEach(imageData => {
+      const div = document.createElement('div');
+      div.className = 'pasted-image-container';
+      const img = document.createElement('img');
+      img.src = imageData.url;
+      img.className = 'pasted-image-preview';
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'pasted-image-remove';
+      removeBtn.innerHTML = '×';
+      removeBtn.onclick = () => this.removePastedImage(imageData.id);
+      div.appendChild(img);
+      div.appendChild(removeBtn);
+      container.appendChild(div);
+    });
+  },
+
+  clearPastedImages() {
+    this.data.pastedImages.forEach(img => URL.revokeObjectURL(img.url));
+    this.data.pastedImages = [];
+    this.renderPastedImages();
+  },
+
+  // Cache DOM elements
+  elements: {},
+  data: {
+    conversations: {},
+    currentConversationId: null,
+    selectedFiles: [],
+    pastedImages: [],
+    sidebarCollapsed: false,
+    katexReady: false,
+    prismReady: false,
+    backendOnline: false
+  },
+
+  // Initialize app
+  init() {
+    console.log('🚀 Initializing app...');
+    this.cacheElements();
+    this.initTextarea();
+    this.initImagePaste();
+    this.initLibraries();
+    this.loadData();
+    this.setupEventListeners();
+    this.startMonitoring();
+    console.log('✅ App initialized successfully');
+  },
+
+  // Cache DOM elements once
+  cacheElements() {
+    const ids = ['chat', 'input', 'sendBtn', 'modelSelect', 'modeSelect', 'fileInput', 'filePreview',
+      'clearBtn', 'newChatBtn', 'chatList', 'chatTitle', 'sidebar', 'sidebarToggle', 'sidebarToggleIcon',
+      'sidebarOverlay', 'latexStatus', 'latexStatusText', 'storageStatus', 'backendStatus', 
+      'backendStatusText', 'tokenStatus', 'tokenModal', 'lockBtn'];
+    
+    ids.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        this.elements[id] = element;
+      } else {
+        console.warn(`⚠️ Element with ID '${id}' not found`);
+      }
+    });
+    
+    console.log('📋 Cached elements:', Object.keys(this.elements));
+  },
+
+  // Password protection
+  initPassword() {
+    if (sessionStorage.getItem("chat_app_authenticated") === "true") {
+      this.unlock();
+      return;
+    }
+
+    const form = document.getElementById('passwordForm');
+    const input = document.getElementById('passwordInput');
+    const errorMsg = document.getElementById('errorMessage');
+    const card = document.querySelector('.password-card');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+              if (input.value.trim() === "8927") {
+        this.unlock();
+      } else {
+        errorMsg.style.display = 'block';
+        card.classList.add('shake');
+        setTimeout(() => {
+          card.classList.remove('shake');
+          errorMsg.style.display = 'none';
+        }, 3000);
+        input.value = '';
+        input.focus();
+      }
+    });
+
+    setTimeout(() => input.focus(), 100);
+    input.addEventListener('input', () => errorMsg.style.display = 'none');
+  },
+
+  unlock() {
+    sessionStorage.setItem("chat_app_authenticated", "true");
+    document.getElementById('passwordOverlay').style.display = 'none';
+    document.getElementById('mainApp').classList.add('unlocked');
+  },
+
+  lock() {
+    sessionStorage.removeItem("chat_app_authenticated");
+    document.getElementById('passwordOverlay').style.display = 'flex';
+    document.getElementById('mainApp').classList.remove('unlocked');
+    const input = document.getElementById('passwordInput');
+    input.value = '';
+    setTimeout(() => input.focus(), 100);
+  },
+
+  // Auto-resize textarea
+  initTextarea() {
+    const input = this.elements.input;
+    const resize = () => {
+      input.style.height = 'auto';
+      const newHeight = Math.min(Math.max(input.scrollHeight, 40), 200);
+      input.style.height = newHeight + 'px';
+      input.style.overflowY = input.scrollHeight > 200 ? 'auto' : 'hidden';
+    };
+    
+    resize();
+    input.addEventListener('input', resize);
+    input.addEventListener('paste', () => setTimeout(resize, 10));
+  },
+
+  // Initialize libraries
+  initLibraries() {
+    // KaTeX check
+    let katexAttempts = 0;
+    const checkKatex = () => {
+      if (typeof katex !== 'undefined' && typeof renderMathInElement !== 'undefined') {
+        this.data.katexReady = true;
+        this.elements.latexStatus.className = 'status-indicator status-ready';
+        this.elements.latexStatusText.textContent = 'LaTeX Ready';
+      } else if (++katexAttempts < 30) {
+        setTimeout(checkKatex, 200);
+      } else {
+        this.elements.latexStatus.className = 'status-indicator status-error';
+        this.elements.latexStatusText.textContent = 'LaTeX Failed';
+      }
+    };
+    checkKatex();
+
+    // Prism check
+    let prismAttempts = 0;
+    const checkPrism = () => {
+      if (typeof Prism !== 'undefined') {
+        this.data.prismReady = true;
+      } else if (++prismAttempts < 20) {
+        setTimeout(checkPrism, 200);
+      }
+    };
+    checkPrism();
+  },
+
+  // Load saved data
+  loadData() {
+    try {
+      const saved = localStorage.getItem('gpt-chat-data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.data.conversations = data.conversations || {};
+        this.data.sidebarCollapsed = data.sidebarCollapsed || false;
+        this.data.currentConversationId = data.currentConversationId;
+        
+        if (this.data.currentConversationId && !this.data.conversations[this.data.currentConversationId]) {
+          this.data.currentConversationId = null;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load data:', e);
+    }
+
+    // Apply sidebar state
+    if (this.data.sidebarCollapsed) {
+      this.elements.sidebar.classList.add('collapsed');
+      this.updateSidebarIcon();
+    }
+
+    // Create or load conversations
+    if (!Object.keys(this.data.conversations).length) {
+      this.createConversation();
+    } else {
+      this.renderChatList();
+      const convId = this.data.currentConversationId || Object.keys(this.data.conversations)[0];
+      this.switchConversation(convId);
+    }
+
+    this.updateStorageStatus('💾 Loaded', 'storage-saved');
+  },
+
+  // Save data with debouncing
+  saveData: (() => {
+    let timeout;
+    return () => {
+      clearTimeout(timeout);
+      App.updateStorageStatus('💾 Saving...', 'storage-saving');
+      
+      timeout = setTimeout(() => {
+        try {
+          const data = {
+            conversations: App.data.conversations,
+            sidebarCollapsed: App.data.sidebarCollapsed,
+            currentConversationId: App.data.currentConversationId,
+            version: '1.0',
+            timestamp: Date.now()
+          };
+          localStorage.setItem('gpt-chat-data', JSON.stringify(data));
+          App.updateStorageStatus('💾 Saved', 'storage-saved');
+        } catch (e) {
+          console.error('Save failed:', e);
+          App.updateStorageStatus('❌ Error', 'storage-error');
+        }
+      }, 1000);
+    };
+  })(),
+
+  // Setup event listeners
+  setupEventListeners() {
+    // Send message
+    this.elements.sendBtn.onclick = () => this.sendMessage();
+    this.elements.input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.sendMessage();
+      }
+    });
+
+    // Navigation
+    this.elements.newChatBtn.onclick = () => this.createConversation();
+    this.elements.clearBtn.onclick = () => this.clearHistory();
+    // Lock button functionality
+    const lockBtn = document.getElementById('lockBtn');
+    if (lockBtn) {
+      lockBtn.onclick = () => {
+        if (confirm('Lock the application?')) PasswordProtection.lock();
+      };
+    } else {
+      console.warn('⚠️ Lock button not found');
+    }
+
+    // Sidebar
+    this.elements.sidebarToggle.onclick = () => this.toggleSidebar();
+    this.elements.sidebarOverlay.onclick = () => {
+      this.elements.sidebar.classList.add('collapsed');
+      this.elements.sidebarOverlay.classList.add('hidden');
+      this.updateSidebarIcon();
+    };
+
+    // File handling
+    this.elements.fileInput.onchange = (e) => {
+      this.data.selectedFiles = [...this.data.selectedFiles, ...Array.from(e.target.files)];
+      this.updateFilePreview();
+      this.elements.fileInput.value = '';
+    };
+
+    // Token modal
+    this.elements.tokenStatus.addEventListener('click', () => this.tokenTracker.showModal());
+    this.elements.tokenModal.addEventListener('click', (e) => {
+      if (e.target === this.elements.tokenModal) this.tokenTracker.hideModal();
+    });
+
+    // Window events
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        this.elements.sidebarOverlay.classList.add('hidden');
+        if (this.data.sidebarCollapsed) {
+          this.elements.sidebar.classList.add('collapsed');
+        } else {
+          this.elements.sidebar.classList.remove('collapsed');
+        }
+      } else if (!this.elements.sidebar.classList.contains('collapsed')) {
+        this.elements.sidebar.classList.add('collapsed');
+        this.elements.sidebarOverlay.classList.add('hidden');
+      }
+      this.updateSidebarIcon();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      this.saveData();
+      this.stopMonitoring();
+    });
+  },
+
+  // Conversation management
+  createConversation() {
+    const id = 'conv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const now = new Date().toISOString();
+    
+    this.data.conversations[id] = {
+      id,
+      title: "New Chat",
+      created: now,
+      lastActive: now,
+      messages: []
+    };
+    
+    this.saveData();
+    this.renderChatList();
+    this.switchConversation(id);
+  },
+
+  switchConversation(id) {
+    this.data.currentConversationId = id;
+    if (this.data.conversations[id]) {
+      this.data.conversations[id].lastActive = new Date().toISOString();
+      this.saveData();
+    }
+    
+    this.elements.chatTitle.textContent = this.data.conversations[id]?.title || "Chat";
+    this.renderChatList();
+    this.elements.chat.innerHTML = '';
+    this.loadHistory();
+    
+    if (window.innerWidth < 768) {
+      this.elements.sidebar.classList.add('collapsed');
+      this.elements.sidebarOverlay.classList.add('hidden');
+    }
+  },
+
+  deleteConversation(id) {
+    if (Object.keys(this.data.conversations).length <= 1) {
+      alert("Cannot delete the last conversation!");
+      return;
+    }
+    
+    if (!confirm("Delete this conversation?")) return;
+    
+    delete this.data.conversations[id];
+    this.saveData();
+    
+    if (id === this.data.currentConversationId) {
+      const remaining = Object.keys(this.data.conversations);
+      if (remaining.length > 0) {
+        this.switchConversation(remaining[0]);
+      }
+    } else {
+      this.renderChatList();
+    }
+  },
+
+  updateConversationTitle(id, title) {
+    if (!this.data.conversations[id]) return;
+    
+    this.data.conversations[id].title = title;
+    this.data.conversations[id].lastActive = new Date().toISOString();
+    this.saveData();
+    this.renderChatList();
+    
+    if (id === this.data.currentConversationId) {
+      this.elements.chatTitle.textContent = title;
+    }
+  },
+
+  renderChatList() {
+    this.elements.chatList.innerHTML = '';
+    
+    Object.values(this.data.conversations)
+      .sort((a, b) => new Date(b.lastActive) - new Date(a.lastActive))
+      .forEach(conv => {
+        const item = document.createElement('div');
+        item.className = `chat-item p-3 rounded-lg cursor-pointer mb-2 text-gray-300 ${
+          conv.id === this.data.currentConversationId ? 'active text-white' : 'hover:text-white'
+        }`;
+        
+        item.onclick = () => this.switchConversation(conv.id);
+        
+        item.innerHTML = `
+          <button class="float-right text-gray-400 hover:text-red-400 text-xs mt-1" 
+                  onclick="event.stopPropagation(); App.deleteConversation('${conv.id}')">×</button>
+          <div class="font-medium text-sm truncate">${conv.title}</div>
+          <div class="text-xs text-gray-400 mt-1">${this.formatTime(conv.lastActive)}</div>
+        `;
+        
+        this.elements.chatList.appendChild(item);
+      });
+  },
+
+  formatTime(timestamp) {
+    const diff = Date.now() - new Date(timestamp);
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    if (hrs < 24) return `${hrs}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return new Date(timestamp).toLocaleDateString();
+  },
+
+  // File handling
+  updateFilePreview() {
+    this.elements.filePreview.innerHTML = '';
+    
+    this.data.selectedFiles.forEach((file, i) => {
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `
+        <span class="file-name" title="${file.name}">${file.name}</span>
+        <button class="remove-btn" onclick="App.removeFile(${i})">×</button>
+      `;
+      this.elements.filePreview.appendChild(item);
+    });
+  },
+
+  removeFile(index) {
+    this.data.selectedFiles.splice(index, 1);
+    this.updateFilePreview();
+  },
+
+  clearFiles() {
+    this.data.selectedFiles = [];
+    this.elements.fileInput.value = '';
+    this.updateFilePreview();
+  },
+
+  // Message handling
+  addMessage(role, text, isHistory = false, attachments = null, imageData = null) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flex flex-col mb-4';
+    
+    // File attachments indicator
+    if (attachments?.length && role === 'user') {
+      const indicator = document.createElement('div');
+      indicator.className = 'text-xs text-gray-500 mb-1 px-2 text-right';
+      indicator.innerHTML = attachments.length === 1 ? 
+        `📎 ${attachments[0]}` : 
+        `📎 ${attachments.length} files: ${attachments.join(', ')}`;
+      wrapper.appendChild(indicator);
+    }
+    
+    const bubble = document.createElement('div');
+    bubble.className = `max-w-[85%] px-3 py-2 rounded-2xl ${
+      role === 'user' ? 'self-end text-gray-100 ml-auto' : 'text-gray-100 mr-auto'
+    }`;
+    bubble.style.backgroundColor = '#2a2a2a';
+    bubble.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+    
+    // Image previews
+    if (imageData?.length && role === 'user') {
+      const container = document.createElement('div');
+      container.className = 'mb-2 flex flex-wrap gap-2';
+      
+      imageData.forEach(img => {
+        const el = document.createElement('img');
+        el.src = img;
+        el.className = 'max-w-full max-h-32 rounded-lg shadow-sm';
+        el.style.maxWidth = '150px';
+        el.style.border = '1px solid #363636';
+        el.alt = 'Uploaded image';
+        container.appendChild(el);
+      });
+      
+      bubble.appendChild(container);
+    }
+    
+    // Message content
+    if (text) {
+      const container = document.createElement('div');
+      container.className = 'message-content';
+      container.innerHTML = this.processText(text);
+      bubble.appendChild(container);
+    }
+    
+    const msgContainer = document.createElement('div');
+    msgContainer.className = 'flex';
+    msgContainer.appendChild(bubble);
+    wrapper.appendChild(msgContainer);
+    this.elements.chat.appendChild(wrapper);
+    
+    if (!isHistory) {
+      this.elements.chat.scrollTop = this.elements.chat.scrollHeight;
+    }
+
+    // Render math and syntax highlighting
+    setTimeout(() => {
+      this.renderMath(bubble);
+      this.highlightCode(bubble);
+    }, 100);
+    
+    // Store message
+    if (this.data.currentConversationId && !isHistory) {
+      if (!this.data.conversations[this.data.currentConversationId].messages) {
+        this.data.conversations[this.data.currentConversationId].messages = [];
+      }
+      
+      this.data.conversations[this.data.currentConversationId].messages.push({
+        role,
+        content: text,
+        attachments,
+        imageData,
+        timestamp: new Date().toISOString()
+      });
+      
+      this.saveData();
+    }
+  },
+
+  // Enhanced text processing
+  processText(text) {
+    const mathParts = [];
+    let mathIndex = 0;
+    let processed = text;
+    
+    // Extract math expressions
+    processed = processed.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+      mathParts.push(match);
+      return `__MATH_${mathIndex++}__`;
+    });
+    
+    processed = processed.replace(/\\\[[\s\S]*?\\\]/g, (match) => {
+      mathParts.push(match);
+      return `__MATH_${mathIndex++}__`;
+    });
+    
+    processed = processed.replace(/\$([^$\n]{1,100})\$/g, (match, content) => {
+      if (content.trim() && !/^[a-zA-Z\s]+$/.test(content)) {
+        mathParts.push(match);
+        return `__MATH_${mathIndex++}__`;
+      }
+      return match;
+    });
+    
+    processed = processed.replace(/\\\(([^)]*?)\\\)/g, (match) => {
+      mathParts.push(match);
+      return `__MATH_${mathIndex++}__`;
+    });
+    
+    // Extract code blocks
+    const codeBlocks = [];
+    let codeIndex = 0;
+    
+    processed = processed.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (match, language, code) => {
+      const lang = language || 'javascript';
+      const cleanCode = code.replace(/^\n+|\n+$/g, '');
+      codeBlocks.push({ language: lang, code: cleanCode });
+      return `\n__CODE_BLOCK_${codeIndex++}__\n`;
+    });
+    
+    // Extract inline code
+    const inlineCode = [];
+    let inlineIndex = 0;
+    processed = processed.replace(/`([^`\n]{1,50})`/g, (match, code) => {
+      if (code.length <= 50 && !/\s+(and|or|the|is|are|was|were|a|an|to|for|with|in|on|at)\s+/i.test(code)) {
+        inlineCode.push(code);
+        return `__INLINE_CODE_${inlineIndex++}__`;
+      }
+      return match;
+    });
+    
+    // Escape HTML
+    processed = processed.replace(/[&<>"']/g, m => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[m]));
+    
+    // Process markdown
+    processed = processed.replace(/\*\*\*([^*]+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    processed = processed.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+    processed = processed.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+    processed = processed.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    processed = processed.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    processed = processed.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    processed = processed.replace(/^[\s]*[-*+]\s(.+)$/gm, '<li>$1</li>');
+    processed = processed.replace(/^[\s]*\d+\.\s(.+)$/gm, '<li>$1</li>');
+    processed = processed.replace(/(<li>.*<\/li>(?:\s*<li>.*<\/li>)*)/gs, '<ul>$1</ul>');
+    processed = processed.replace(/^>\s(.+)$/gm, '<blockquote>$1</blockquote>');
+    processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    processed = processed.replace(/\n/g, '<br>');
+    
+    // Handle paragraphs
+    if (processed.includes('<br><br>')) {
+      processed = processed.replace(/(<br>\s*<br>)+/g, '</p><p>');
+      processed = '<p>' + processed + '</p>';
+      processed = processed.replace(/<p>\s*<\/p>/g, '');
+      processed = processed.replace(/<p>(<h[1-6]>.*?<\/h[1-6]>)<\/p>/g, '$1');
+      processed = processed.replace(/<p>(<ul>.*?<\/ul>)<\/p>/gs, '$1');
+      processed = processed.replace(/<p>(<blockquote>.*?<\/blockquote>)<\/p>/g, '$1');
+      processed = processed.replace(/<p>(__CODE_BLOCK_\d+__)<\/p>/g, '$1');
+    }
+    
+    // Restore inline code
+    inlineCode.forEach((code, index) => {
+      processed = processed.replace(`__INLINE_CODE_${index}__`, `<code>${code}</code>`);
+    });
+    
+    // Restore code blocks
+    codeBlocks.forEach((block, index) => {
+      const codeId = `code-${Date.now()}-${index}`;
+      const escapedCode = block.code.replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+      
+      processed = processed.replace(`__CODE_BLOCK_${index}__`, 
+        `<div class="code-block-container" style="margin: 1.5rem 0;">
+          <pre style="margin: 0; background: #1e1e1e; border: 1px solid #404040; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.3); position: relative;">
+            <button class="copy-btn" onclick="App.copyCode('${codeId}')" style="position: absolute; top: 0.5rem; right: 0.5rem; background: #4a5568; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s; z-index: 10;">Copy</button>
+            <div class="code-content" style="padding: 0.5rem 1rem; overflow-x: auto; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 0.9rem; line-height: 1.5; color: #f8f8f2; background: #1e1e1e;">
+              <code id="${codeId}" class="language-${block.language}" style="color: #f8f8f2; background: none; padding: 0; border: none; font-family: inherit; font-size: inherit; white-space: pre; display: block;">${escapedCode}</code>
+            </div>
+          </pre>
+        </div>`);
+    });
+    
+    // Restore math expressions
+    mathParts.forEach((math, index) => {
+      processed = processed.replace(`__MATH_${index}__`, math);
+    });
+    
+    return processed;
+  },
+
+  copyCode(codeId) {
+    const codeElement = document.getElementById(codeId);
+    if (!codeElement) return;
+    
+    const text = codeElement.textContent;
+    const button = codeElement.closest('pre').querySelector('.copy-btn');
+    
+    navigator.clipboard.writeText(text).then(() => {
+      const originalText = button.textContent;
+      button.textContent = 'Copied!';
+      button.style.background = '#48bb78';
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '#4a5568';
+      }, 2000);
+    }).catch(() => {
+      button.textContent = 'Failed';
+      setTimeout(() => button.textContent = 'Copy', 2000);
+    });
+  },
+
+  renderMath(element) {
+    if (!this.data.katexReady) return;
+    
+    try {
+      renderMathInElement(element, {
+        delimiters: [
+          {left: '$', right: '$', display: true},
+          {left: ', right: ', display: false},
+          {left: '\\[', right: '\\]', display: true},
+          {left: '\\(', right: '\\)', display: false}
+        ],
+        throwOnError: false,
+        errorColor: '#ff6b6b',
+        strict: false,
+        trust: true,
+        processEscapes: true,
+        ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        ignoredClasses: ['code-block-container']
+      });
+    } catch (e) {
+      console.error('KaTeX error:', e);
+    }
+  },
+
+  highlightCode(element) {
+    if (!this.data.prismReady) return;
+    
+    const codeBlocks = element.querySelectorAll('code[class*="language-"]');
+    codeBlocks.forEach(block => {
+      try {
+        Prism.highlightElement(block);
+      } catch (e) {
+        console.warn('Prism highlighting failed:', e);
+      }
+    });
+  },
+
+  // Load conversation history
+  loadHistory() {
+    if (!this.data.currentConversationId || !this.data.conversations[this.data.currentConversationId]) return;
+    
+    try {
+      const conversation = this.data.conversations[this.data.currentConversationId];
+      const messages = conversation.messages || [];
+      
+      if (messages.length) {
+        this.elements.chat.innerHTML = '';
+        messages.forEach(msg => {
+          this.addMessage(msg.role, msg.content, true, msg.attachments, msg.imageData);
+        });
+        setTimeout(() => this.elements.chat.scrollTop = this.elements.chat.scrollHeight, 100);
+      }
+    } catch (e) {
+      console.error('Error loading history:', e);
+    }
+  },
+
+  // Clear conversation history
+  clearHistory() {
+    if (!this.data.currentConversationId || !this.data.conversations[this.data.currentConversationId]) return;
+    
+    try {
+      this.data.conversations[this.data.currentConversationId].messages = [];
+      this.saveData();
+      this.elements.chat.innerHTML = '';
+    } catch (e) {
+      console.error('Clear error:', e);
+    }
+  },
+
+  // Send message to server
+  async sendMessage() {
+    console.log('📤 Send message called');
+    console.log('Backend online:', this.data.backendOnline);
+    console.log('Current conversation:', this.data.currentConversationId);
+    
+    if (!this.data.currentConversationId) {
+      console.log('❌ No conversation ID, creating new conversation');
+      this.createConversation();
+      return;
+    }
+    
+    const message = this.elements.input.value.trim();
+    const model = this.elements.modelSelect.value;
+    const mode = this.elements.modeSelect.value;
+    const currentFiles = this.data.selectedFiles;
+    const currentPastedImages = this.data.pastedImages; // ADD THIS LINE
+
+    console.log('Message:', message);
+    console.log('Files:', currentFiles.length);
+    console.log('Pasted images:', currentPastedImages.length); // ADD THIS LINE
+
+    if (!message && !currentFiles.length && !currentPastedImages.length) { // MODIFY THIS LINE
+      console.log('❌ No message, files, or pasted images');
+      return;
+    }
+    
+    // Proceed even if backend appears offline (for testing)
+    console.log('✅ Proceeding with send...');
+    
+    const currentConv = this.data.conversations[this.data.currentConversationId];
+    if (currentConv?.title === 'New Chat' && message) {
+      this.updateConversationTitle(this.data.currentConversationId, 
+        message.substring(0, 10) + (message.length > 10 ? '...' : ''));
+    }
+    
+    let displayMessage = message || (!message && currentFiles.length ? `Uploaded ${currentFiles.length} file(s)` : '');
+    let imageUrls = [];
+    let fileNames = [];
+    
+    currentFiles.forEach(file => {
+      fileNames.push(file.name);
+      if (this.isImageFile(file.name)) {
+        imageUrls.push(URL.createObjectURL(file));
+      }
+    });
+
+    currentPastedImages.forEach(imageData => {
+      fileNames.push(imageData.name);
+      imageUrls.push(imageData.url);
+    });
+    
+    this.addMessage('user', displayMessage, false, fileNames, imageUrls.length ? imageUrls : null);
+    this.elements.input.value = '';
+    this.clearFiles();
+    this.clearPastedImages();
+    
+    // Auto-resize textarea
+    this.elements.input.style.height = 'auto';
+    this.elements.input.style.height = '40px';
+    
+    // Show typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'flex mb-4';
+    typing.innerHTML = `
+      <div class="max-w-[75%] px-4 py-3 rounded-2xl text-gray-100 mr-auto" style="background-color:#2a2a2a;">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+    `;
+    this.elements.chat.appendChild(typing);
+    this.elements.chat.scrollTop = this.elements.chat.scrollHeight;
+    
+    try {
+      const formData = new FormData();
+      formData.append('message', message);
+      formData.append('model', model);
+      formData.append('mode', mode);
+      formData.append('conversation_id', this.data.currentConversationId);
+      currentFiles.forEach(file => formData.append('files', file));
+
+      currentPastedImages.forEach(imageData => {
+        formData.append('files', imageData.file);
+      });
+      
+      console.log('📡 Sending to backend...');
+      const response = await fetch("http://127.0.0.1:5000/chat", {
+        method: "POST",
+        body: formData
+      });
+      
+      typing.remove();
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const data = await response.json();
+      this.addMessage('assistant', data.error ? `Error: ${data.error}` : data.response || '[No response]');
+      
+      // Process token usage
+      if (data.token_usage) {
+        this.tokenTracker.processResponse(data.token_usage);
+      }
+      
+      this.data.conversations[this.data.currentConversationId].lastActive = new Date().toISOString();
+      this.saveData();
+      this.renderChatList();
+      
+    } catch (e) {
+      typing.remove();
+      console.error('❌ Send error:', e);
+      this.addMessage('assistant', `[Request failed: ${e.message}]`);
+    }
+    
+    // Clean up object URLs
+    imageUrls.forEach(url => setTimeout(() => URL.revokeObjectURL(url), 5000));
+  },
+
+  isImageFile(name) {
+    return name && ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'].some(ext => 
+      name.toLowerCase().endsWith(ext));
+  },
+
+  // Sidebar management
+  toggleSidebar() {
+    if (window.innerWidth < 768) {
+      this.elements.sidebar.classList.toggle('collapsed');
+      this.elements.sidebarOverlay.classList.toggle('hidden');
+    } else {
+      this.elements.sidebar.classList.toggle('collapsed');
+      this.data.sidebarCollapsed = this.elements.sidebar.classList.contains('collapsed');
+      this.saveData();
+    }
+    this.updateSidebarIcon();
+  },
+
+  updateSidebarIcon() {
+    const collapsed = this.elements.sidebar.classList.contains('collapsed');
+    this.elements.sidebarToggleIcon.innerHTML = collapsed ?
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>' :
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>';
+  },
+
+  // Status management
+  updateStorageStatus(text, className) {
+    this.elements.storageStatus.textContent = text;
+    this.elements.storageStatus.className = `storage-status ${className}`;
+  },
+
+  // Monitoring systems
+  startMonitoring() {
+    this.backendChecker.start();
+    this.tokenTracker.start();
+  },
+
+  stopMonitoring() {
+    this.backendChecker.stop();
+    this.tokenTracker.stop();
+  },
+
+  // Backend status checker
+  backendChecker: {
+    interval: null,
+    
+    async check() {
+      console.log('🔍 Checking backend health at http://127.0.0.1:5000/health');
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.log('⏰ Health check timeout after 5 seconds');
+          controller.abort();
+        }, 5000);
+        
+        const response = await fetch("http://127.0.0.1:5000/health", {
+          method: "GET",
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('📡 Health check response status:', response.status);
+        console.log('📡 Health check response ok:', response.ok);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Health check data:', data);
+          
+          App.data.backendOnline = true;
+          App.elements.backendStatus.className = 'status-indicator status-ready';
+          App.elements.backendStatusText.textContent = 'Server Online';
+          App.elements.sendBtn.disabled = false;
+          App.elements.sendBtn.style.opacity = '1';
+          console.log('✅ Backend marked as online');
+        } else {
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+      } catch (error) {
+        console.log('❌ Backend health check failed with error:', error);
+        console.log('❌ Error name:', error.name);
+        console.log('❌ Error message:', error.message);
+        
+        // Provide more specific error messages
+        if (error.name === 'AbortError') {
+          console.log('⏰ Health check timed out after 5 seconds');
+          App.elements.backendStatusText.textContent = 'Health Timeout';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+          console.log('🌐 Network error - server might be down or CORS issue');
+          App.elements.backendStatusText.textContent = 'Connection Failed';
+        } else if (error.message.includes('CORS')) {
+          console.log('🔒 CORS error detected');
+          App.elements.backendStatusText.textContent = 'CORS Error';
+        } else {
+          console.log('❓ Unknown error type');
+          App.elements.backendStatusText.textContent = `Error: ${error.message.substring(0, 20)}`;
+        }
+        
+        App.data.backendOnline = false;
+        App.elements.backendStatus.className = 'status-indicator status-error';
+        
+        // Keep send button enabled since chat endpoint might work
+        App.elements.sendBtn.disabled = false;
+        App.elements.sendBtn.style.opacity = '0.7';
+      }
+    },
+    
+    start() {
+      this.check();
+      this.interval = setInterval(() => this.check(), 5000);
+    },
+    
+    stop() {
+      if (this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
+      }
+    }
+  },
+
+  // Token tracking system
+  tokenTracker: {
+    currentData: null,
+    interval: null,
+    
+    async fetchUsage() {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/token_usage");
+        if (response.ok) {
+          this.currentData = await response.json();
+          this.updateDisplay();
+        } else {
+          throw new Error('Failed to fetch token usage');
+        }
+      } catch (error) {
+        console.error('Token fetch error:', error);
+        App.elements.tokenStatus.textContent = '❌ Token Error';
+      }
+    },
+    
+    updateDisplay() {
+      if (!this.currentData) return;
+      
+      const today = this.currentData.today;
+      App.elements.tokenStatus.textContent = `🪙 ${today.total_tokens.toLocaleString()}`;
+      App.elements.tokenStatus.title = `Click for details\nInput: ${today.input_tokens.toLocaleString()}\nOutput: ${today.output_tokens.toLocaleString()}\nRequests: ${today.requests}`;
+    },
+    
+    showModal() {
+      if (!this.currentData) {
+        this.fetchUsage().then(() => this.showModal());
+        return;
+      }
+      
+      this.renderModal();
+      App.elements.tokenModal.style.display = 'flex';
+    },
+    
+    hideModal() {
+      App.elements.tokenModal.style.display = 'none';
+    },
+    
+    renderModal() {
+      const data = this.currentData;
+      const today = data.today;
+      
+      const statsContainer = document.getElementById('tokenStats');
+      statsContainer.innerHTML = `
+        <div class="token-stat">
+          <div class="token-stat-value">${today.total_tokens.toLocaleString()}</div>
+          <div class="token-stat-label">Total Tokens</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-value">${today.input_tokens.toLocaleString()}</div>
+          <div class="token-stat-label">Input Tokens</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-value">${today.output_tokens.toLocaleString()}</div>
+          <div class="token-stat-label">Output Tokens</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-value">${today.requests}</div>
+          <div class="token-stat-label">Requests</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-value">${today.cost_estimate.toFixed(4)}</div>
+          <div class="token-stat-label">Cost Today</div>
+        </div>
+        <div class="token-stat">
+          <div class="token-stat-value">${data.total_days_tracked}</div>
+          <div class="token-stat-label">Days Tracked</div>
+        </div>
+      `;
+      
+      const historyContainer = document.getElementById('tokenHistory');
+      historyContainer.innerHTML = '';
+      
+      data.history.forEach(day => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+          <div>
+            <strong>${day.date_formatted}</strong><br>
+            <small>${day.requests} requests</small>
+          </div>
+          <div style="text-align: right;">
+            <div>${day.total_tokens.toLocaleString()} tokens</div>
+            <div style="color: #10b981;">${day.cost_estimate.toFixed(4)}</div>
+          </div>
+        `;
+        historyContainer.appendChild(item);
+      });
+    },
+    
+    async resetDailyTokens() {
+      if (!confirm('Are you sure you want to reset today\'s token counter?')) return;
+      
+      try {
+        const response = await fetch("http://127.0.0.1:5000/reset_tokens", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        
+        if (response.ok) {
+          await this.fetchUsage();
+          this.renderModal();
+        } else {
+          throw new Error('Failed to reset tokens');
+        }
+      } catch (error) {
+        console.error('Token reset error:', error);
+        alert('Failed to reset token counter');
+      }
+    },
+    
+    processResponse(tokenUsage) {
+      if (tokenUsage) {
+        this.currentData = this.currentData || { today: {} };
+        Object.assign(this.currentData.today, {
+          total_tokens: tokenUsage.daily_total || 0,
+          cost_estimate: tokenUsage.daily_cost || 0,
+          input_tokens: this.currentData.today.input_tokens || 0,
+          output_tokens: this.currentData.today.output_tokens || 0,
+          requests: this.currentData.today.requests || 0
+        });
+        this.updateDisplay();
+        
+        setTimeout(() => this.fetchUsage(), 1000);
+      }
+    },
+    
+    start() {
+      if (App.data.backendOnline) {
+        this.fetchUsage();
+      }
+      this.interval = setInterval(() => {
+        if (App.data.backendOnline) {
+          this.fetchUsage();
+        }
+      }, 30000);
+    },
+    
+    stop() {
+      if (this.interval) {
+        clearInterval(this.interval);
+        this.interval = null;
+      }
+    }
+  }
+};
+
+// Global functions for inline event handlers
+window.copyCodeBlock = (codeId) => App.copyCode(codeId);
+
+// Initialize password protection first, then app if already authenticated
+document.addEventListener('DOMContentLoaded', () => {
+  PasswordProtection.init();
+});
+
+// Password Protection System (standalone)
+const PasswordProtection = {
+  correctPassword: "8927",
+  sessionKey: "chat_app_authenticated",
+  
+  init() {
+    if (sessionStorage.getItem(this.sessionKey) === "true") {
+      this.unlock();
+      return;
+    }
+    this.setupPasswordForm();
+  },
+  
+  setupPasswordForm() {
+    const form = document.getElementById('passwordForm');
+    const input = document.getElementById('passwordInput');
+    const errorMsg = document.getElementById('errorMessage');
+    const card = document.querySelector('.password-card');
+    
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const enteredPassword = input.value.trim();
+      
+      if (enteredPassword === this.correctPassword) {
+        this.unlock();
+      } else {
+        this.showError();
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 500);
+        input.value = '';
+        input.focus();
+      }
+    });
+    
+    setTimeout(() => input.focus(), 100);
+    
+    input.addEventListener('input', () => {
+      if (errorMsg.style.display === 'block') {
+        errorMsg.style.display = 'none';
+      }
+    });
+  },
+  
+  unlock() {
+    sessionStorage.setItem(this.sessionKey, "true");
+    document.getElementById('passwordOverlay').style.display = 'none';
+    document.getElementById('mainApp').classList.add('unlocked');
+    
+    // Initialize the main app after unlocking
+    setTimeout(() => App.init(), 100);
+  },
+  
+  lock() {
+    sessionStorage.removeItem(this.sessionKey);
+    document.getElementById('passwordOverlay').style.display = 'flex';
+    document.getElementById('mainApp').classList.remove('unlocked');
+    
+    // Stop all monitoring when locked
+    App.stopMonitoring();
+    
+    const input = document.getElementById('passwordInput');
+    input.value = '';
+    setTimeout(() => input.focus(), 100);
+  },
+  
+  showError() {
+    const errorMsg = document.getElementById('errorMessage');
+    errorMsg.style.display = 'block';
+    setTimeout(() => errorMsg.style.display = 'none', 3000);
+  }
+};
+  </script>
+</body>
+</html>
