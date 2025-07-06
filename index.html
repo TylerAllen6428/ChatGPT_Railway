@@ -1505,7 +1505,7 @@ const App = {
       });
       
       console.log('📡 Sending to backend...');
-      const response = await fetch("https://chatgptrailway-production.up.railway.app/chat", {
+      const response = await fetch("https://chatgpt-render-f8a2.onrender.com/chat", {
         method: "POST",
         body: formData
       });
@@ -1583,7 +1583,7 @@ const App = {
     interval: null,
     
     async check() {
-      console.log('🔍 Checking backend health at https://chatgptrailway-production.up.railway.app/health');
+      console.log('🔍 Checking backend health at https://chatgpt-render-f8a2.onrender.com/health');
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
@@ -1591,7 +1591,7 @@ const App = {
           controller.abort();
         }, 5000);
         
-        const response = await fetch("https://chatgptrailway-production.up.railway.app/health", {
+        const response = await fetch("https://chatgpt-render-f8a2.onrender.com/health", {
           method: "GET",
           signal: controller.signal,
           headers: {
@@ -1666,7 +1666,7 @@ const App = {
     
     async fetchUsage() {
       try {
-        const response = await fetch("https://chatgptrailway-production.up.railway.app/token_usage");
+        const response = await fetch("https://chatgpt-render-f8a2.onrender.com/token_usage");
         if (response.ok) {
           this.currentData = await response.json();
           this.updateDisplay();
@@ -1757,7 +1757,7 @@ const App = {
       if (!confirm('Are you sure you want to reset today\'s token counter?')) return;
       
       try {
-        const response = await fetch("https://chatgptrailway-production.up.railway.app/reset_tokens", {
+        const response = await fetch("https://chatgpt-render-f8a2.onrender.com/reset_tokens", {
           method: "POST",
           headers: { "Content-Type": "application/json" }
         });
