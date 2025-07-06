@@ -182,7 +182,7 @@ def should_search(message, mode):
     """Determine if a message should trigger web search"""
     # Search triggers
     search_indicators = [
-        "search", "find", "look up", "what's new", "latest", "recent", "current", 
+        "search", "find", "look up", "look it up", "what's new", "latest", "recent", "current", 
         "today", "2024", "2025", "now", "update", "news", "price", "cost",
         "weather", "stock", "trending", "happening", "breaking"
     ]
