@@ -6,3 +6,4 @@ requests
 python-docx
 PyPDF2
 beautifulsoup4
+tiktoken
