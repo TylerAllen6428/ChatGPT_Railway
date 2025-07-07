@@ -29,7 +29,7 @@ conversation_metadata = {}
 daily_token_usage = {}
 
 # Token limits for context window management - ONLY for context, not response
-MAX_CONTEXT_TOKENS = 3000
+MAX_CONTEXT_TOKENS = 1500
 TOKENS_PER_CHAR = 4
 
 def get_token_counter():
