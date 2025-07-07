@@ -627,10 +627,6 @@
           <div class="flex items-center text-xs text-gray-400">
             <span id="storageStatus" class="storage-status storage-saved">💾 Saved</span>
           </div>
-          <div class="flex items-center text-xs text-gray-400">
-            <span id="updateStatus" class="status-indicator status-loading"></span>
-            <span id="updateStatusText">Updated: Loading...</span>
-          </div>
           <select id="modeSelect" class="text-gray-100 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" style="background-color: #2a2a2a; border-color: #363636;">
             <option value="general">💬 General</option>
             <option value="coding">🔧 Coding</option>
@@ -652,7 +648,7 @@
       
       <main id="chat" class="flex-1 overflow-y-auto p-4 space-y-4"></main>
       
-      <footer class="p-4 flex gap-2 items-end border-t" style="background-color: #171717; border-color: #363636;">
+      <footer class="p-4 flex gap-2 items-end border-t relative" style="background-color: #171717; border-color: #363636;">
         <div class="flex-1 flex flex-col gap-2">
           <textarea id="input" class="flex-1 border text-gray-100 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-gray-500 placeholder-gray-400" style="background-color: #212121; border-color: #363636;" placeholder="Type your message..."></textarea>
           <div class="flex gap-2 items-end">
@@ -664,6 +660,9 @@
         <button id="sendBtn" class="hover:bg-green-600 text-white px-4 py-2 rounded self-end font-medium" style="background-color: #10b981;">
           Send
         </button>
+        <div id="updateStatusText" class="absolute bottom-1 left-2 text-xs text-gray-500 opacity-60">
+          Updated: Loading...
+        </div>
       </footer>
     </div>
   </div>
@@ -770,7 +769,7 @@ const App = {
     const ids = ['chat', 'input', 'sendBtn', 'modelSelect', 'modeSelect', 'fileInput', 'filePreview',
       'clearBtn', 'newChatBtn', 'chatList', 'chatTitle', 'sidebar', 'sidebarToggle', 'sidebarToggleIcon',
       'sidebarOverlay', 'latexStatus', 'latexStatusText', 'storageStatus', 'backendStatus', 
-      'backendStatusText', 'tokenStatus', 'tokenModal', 'lockBtn', 'updateStatus', 'updateStatusText'];
+      'backendStatusText', 'tokenStatus', 'tokenModal', 'lockBtn', 'updateStatusText'];
     
     ids.forEach(id => {
       const element = document.getElementById(id);
@@ -1620,7 +1619,6 @@ const App = {
           console.log('✅ Backend marked as online');
           const lastUpdate = new Date().toLocaleString();
           App.elements.updateStatusText.textContent = `Updated: ${lastUpdate}`;
-          App.elements.updateStatus.className = 'status-indicator status-ready';
         } else {
           throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
