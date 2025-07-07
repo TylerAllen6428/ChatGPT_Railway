@@ -156,21 +156,25 @@ Structure your analysis with clear sections and bullet points for key findings."
 - Connect new information to existing knowledge
 Always check understanding and offer to elaborate on any unclear points."""
 }
+Universal_prompts = """Respond with in depth answers to the exact prompt provided. Look at all context to make sure you are answering with the correct information. 
+All parts of response should be in depth"""
 
 def get_system_prompt(mode, has_search_results=False):
     """Get the system prompt for the specified mode"""
     base_prompt = SYSTEM_PROMPTS.get(mode)
+
+    prompt = Universal_prompts + (base_prompt or "")
     
     if has_search_results:
         search_addon = "\n\nYou have access to current web search results. Use them to provide up-to-date, accurate information. Always cite your sources when using search results."
-        return (base_prompt or "") + search_addon
+        return prompt + search_addon
     
-    return base_prompt
+    return prompt
 
 def get_temperature_for_mode(mode):
     """Get optimal temperature setting for each mode"""
     temperatures = {
-        "general": 0.3,
+        "general": 0.5,
         "coding": 0.1,
         "creative": 0.8,
         "analysis": 0.2,
