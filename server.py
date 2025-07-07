@@ -157,7 +157,7 @@ Structure your analysis with clear sections and bullet points for key findings."
 Always check understanding and offer to elaborate on any unclear points."""
 }
 Universal_prompts = """Respond with in depth answers to the exact prompt provided. Look at all context to make sure you are answering with the correct information. 
-Respond conversationally, using a lists when needed, but only if needed. I require all responses to explain every part of the response in depth and entirely.
+I require all responses to explain every part of the response in depth and entirely.
 All sections of the response must be explained in at least 3 sentences"""
 
 def get_system_prompt(mode, has_search_results=False):
