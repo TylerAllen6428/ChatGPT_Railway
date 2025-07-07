@@ -627,6 +627,10 @@
           <div class="flex items-center text-xs text-gray-400">
             <span id="storageStatus" class="storage-status storage-saved">💾 Saved</span>
           </div>
+          <div class="flex items-center text-xs text-gray-400">
+            <span id="updateStatus" class="status-indicator status-loading"></span>
+            <span id="updateStatusText">Updated: Loading...</span>
+          </div>
           <select id="modeSelect" class="text-gray-100 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500" style="background-color: #2a2a2a; border-color: #363636;">
             <option value="general">💬 General</option>
             <option value="coding">🔧 Coding</option>
@@ -766,7 +770,7 @@ const App = {
     const ids = ['chat', 'input', 'sendBtn', 'modelSelect', 'modeSelect', 'fileInput', 'filePreview',
       'clearBtn', 'newChatBtn', 'chatList', 'chatTitle', 'sidebar', 'sidebarToggle', 'sidebarToggleIcon',
       'sidebarOverlay', 'latexStatus', 'latexStatusText', 'storageStatus', 'backendStatus', 
-      'backendStatusText', 'tokenStatus', 'tokenModal', 'lockBtn'];
+      'backendStatusText', 'tokenStatus', 'tokenModal', 'lockBtn', 'updateStatus', 'updateStatusText'];
     
     ids.forEach(id => {
       const element = document.getElementById(id);
@@ -1614,6 +1618,9 @@ const App = {
           App.elements.sendBtn.disabled = false;
           App.elements.sendBtn.style.opacity = '1';
           console.log('✅ Backend marked as online');
+          const lastUpdate = new Date().toLocaleString();
+          App.elements.updateStatusText.textContent = `Updated: ${lastUpdate}`;
+          App.elements.updateStatus.className = 'status-indicator status-ready';
         } else {
           throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
