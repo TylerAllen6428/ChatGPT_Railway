@@ -1625,7 +1625,7 @@ const App = {
         // Provide more specific error messages
         if (error.name === 'AbortError') {
           console.log('⏰ Health check timed out after 5 seconds');
-          App.elements.backendStatusText.textContent = 'Health Timeout';
+          App.elements.backendStatusText.textContent = 'Backend Offline';
         } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
           console.log('🌐 Network error - server might be down or CORS issue');
           App.elements.backendStatusText.textContent = 'Connection Failed';
