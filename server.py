@@ -16,6 +16,9 @@ from bs4 import BeautifulSoup
 import time
 import os
 import tiktoken
+import signal
+import sys
+import shutil
 
 client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
@@ -25,12 +28,52 @@ CORS(app)
 chat_histories = {}
 conversation_metadata = {}
 
-# Token tracking storage
-daily_token_usage = {}
+# Token persistence settings
+TOKEN_USAGE_FILE = os.path.join(os.getcwd(), "token_usage.json")
 
 # Token limits for context window management - ONLY for context, not response
 MAX_CONTEXT_TOKENS = 1500
 TOKENS_PER_CHAR = 4
+
+def load_token_usage():
+    """Load token usage data from file with error handling for cloud deployments"""
+    try:
+        if os.path.exists(TOKEN_USAGE_FILE):
+            with open(TOKEN_USAGE_FILE, 'r') as f:
+                data = json.load(f)
+                print(f"📂 Loaded token usage data for {len(data)} days")
+                return data
+        print("📂 No existing token usage file found, starting fresh")
+        return {}
+    except Exception as e:
+        print(f"⚠️ Error loading token usage: {e}")
+        return {}
+
+def save_token_usage():
+    """Save token usage data to file with error handling for cloud deployments"""
+    try:
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(TOKEN_USAGE_FILE), exist_ok=True)
+        
+        # Create backup if file exists
+        if os.path.exists(TOKEN_USAGE_FILE):
+            try:
+                backup_file = f"{TOKEN_USAGE_FILE}.backup"
+                shutil.copy2(TOKEN_USAGE_FILE, backup_file)
+            except:
+                pass  # Backup failed, but continue
+        
+        # Save current data
+        with open(TOKEN_USAGE_FILE, 'w') as f:
+            json.dump(daily_token_usage, f, indent=2)
+        print("💾 Token usage data saved successfully")
+        return True
+    except Exception as e:
+        print(f"⚠️ Error saving token usage: {e}")
+        return False
+
+# Initialize token tracking with persistence
+daily_token_usage = load_token_usage()
 
 def get_token_counter():
     """Get or create token counter for today"""
@@ -92,7 +135,7 @@ def estimate_cost(input_tokens, output_tokens, model):
     return input_cost + output_cost
 
 def update_token_usage(input_tokens, output_tokens, model):
-    """Update daily token usage tracking"""
+    """Update daily token usage tracking with file persistence"""
     counter = get_token_counter()
     
     counter["input_tokens"] += input_tokens
@@ -110,6 +153,10 @@ def update_token_usage(input_tokens, output_tokens, model):
                  if (today - datetime.strptime(d, "%Y-%m-%d").date()).days > 30]
     for old_date in old_dates:
         del daily_token_usage[old_date]
+        print(f"🗑️ Cleaned up old token data for {old_date}")
+    
+    # Save to file after each update (async to avoid blocking)
+    save_token_usage()
     
     print(f"📊 Token usage updated: +{input_tokens} input, +{output_tokens} output (${request_cost:.4f})")
     return counter
@@ -156,6 +203,7 @@ Structure your analysis with clear sections and bullet points for key findings."
 - Connect new information to existing knowledge
 Always check understanding and offer to elaborate on any unclear points."""
 }
+
 Universal_prompts = """Respond with in depth answers to the exact prompt provided. Look at all context to make sure you are answering with the correct information. 
 I require all responses to explain every part of the response in depth and entirely. All sections of the response must be explained in at least 3 sentences.
 If a prompt is provided without proper context, look at previous messages for needed context."""
@@ -773,6 +821,9 @@ def reset_daily_tokens():
         if today in daily_token_usage:
             del daily_token_usage[today]
         
+        # Save after reset
+        save_token_usage()
+        
         new_counter = get_token_counter()
         return jsonify({
             "success": True,
@@ -782,6 +833,36 @@ def reset_daily_tokens():
         
     except Exception as e:
         return jsonify({"error": f"Failed to reset tokens: {str(e)}"}), 500
+
+@app.route("/save_token_data", methods=["POST"])
+def save_token_data():
+    """Manually save token usage data"""
+    try:
+        success = save_token_usage()
+        return jsonify({
+            "success": success,
+            "message": "Token usage data saved successfully" if success else "Failed to save token usage data",
+            "days_saved": len(daily_token_usage),
+            "file_path": TOKEN_USAGE_FILE
+        })
+    except Exception as e:
+        return jsonify({"error": f"Failed to save token data: {str(e)}"}), 500
+
+@app.route("/reload_token_data", methods=["POST"])
+def reload_token_data():
+    """Reload token usage data from file"""
+    try:
+        global daily_token_usage
+        daily_token_usage = load_token_usage()
+        today_counter = get_token_counter()
+        return jsonify({
+            "success": True,
+            "message": "Token usage data reloaded successfully",
+            "days_loaded": len(daily_token_usage),
+            "today": today_counter
+        })
+    except Exception as e:
+        return jsonify({"error": f"Failed to reload token data: {str(e)}"}), 500
 
 @app.route("/search", methods=["POST"])
 def manual_search():
@@ -874,6 +955,14 @@ def delete_conversation():
 @app.route("/health", methods=["GET"])
 def health_check():
     today_counter = get_token_counter()
+    
+    # Check if token file exists and get its size
+    token_file_status = "Not found"
+    token_file_size = 0
+    if os.path.exists(TOKEN_USAGE_FILE):
+        token_file_size = os.path.getsize(TOKEN_USAGE_FILE)
+        token_file_status = f"Found ({token_file_size} bytes)"
+    
     return jsonify({
         "status": "healthy", 
         "timestamp": get_timestamp(), 
@@ -884,14 +973,45 @@ def health_check():
         "response_token_limit": "Unlimited",
         "daily_tokens": today_counter["total_tokens"],
         "daily_cost": f"${today_counter['cost_estimate']:.4f}",
-        "daily_requests": today_counter["requests"]
+        "daily_requests": today_counter["requests"],
+        "token_persistence": "JSON File",
+        "token_file_status": token_file_status,
+        "token_file_path": TOKEN_USAGE_FILE,
+        "days_tracked": len(daily_token_usage),
+        "environment": "Production" if os.getenv('RENDER') or os.getenv('NETLIFY') else "Development"
     })
 
+# Graceful shutdown handling for cloud deployments
+def signal_handler(sig, frame):
+    """Handle shutdown gracefully by saving data"""
+    print("\n🛑 Shutting down gracefully...")
+    try:
+        save_token_usage()
+        print("✅ Token usage data saved before shutdown")
+    except Exception as e:
+        print(f"⚠️ Error saving data during shutdown: {e}")
+    sys.exit(0)
+
+# Register signal handlers for graceful shutdown
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 if __name__ == "__main__":
+    print("🚀 Starting Flask Chat Application")
     print("🦆 DuckDuckGo web search enabled (free)")
     print(f"📝 Context limit: {MAX_CONTEXT_TOKENS} tokens")
     print("🚀 Response limit: UNLIMITED")
-    print("📊 Token tracking enabled with daily reset")
+    print("📊 Token tracking enabled with file persistence")
+    print(f"💾 Token data file: {TOKEN_USAGE_FILE}")
+    print(f"📈 Currently tracking {len(daily_token_usage)} days of usage")
+    
+    # Environment detection
+    if os.getenv('RENDER'):
+        print("🌐 Running on Render")
+    elif os.getenv('NETLIFY'):
+        print("🌐 Running on Netlify")
+    else:
+        print("💻 Running locally")
     
     # Install tiktoken if not available
     try:
@@ -901,6 +1021,20 @@ if __name__ == "__main__":
         print("⚠️  tiktoken not found - install with: pip install tiktoken")
         print("   Using fallback character-based estimation")
     
-    if __name__ == "__main__":
-        port = int(os.environ.get("PORT", 5000))
-        app.run(host="0.0.0.0", port=port, debug=False)
+    # Test token file write permissions
+    try:
+        test_data = {"test": "write_permission_check"}
+        with open(TOKEN_USAGE_FILE, 'w') as f:
+            json.dump(test_data, f)
+        os.remove(TOKEN_USAGE_FILE)
+        print("✅ File write permissions OK")
+        
+        # Reload actual token data
+        daily_token_usage = load_token_usage()
+        
+    except Exception as e:
+        print(f"⚠️ File write permission issue: {e}")
+        print("   Token persistence may not work on this platform")
+    
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
