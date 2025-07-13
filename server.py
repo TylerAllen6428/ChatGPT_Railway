@@ -206,7 +206,7 @@ Always check understanding and offer to elaborate on any unclear points."""
 
 Universal_prompts = """Respond with in depth answers to the exact prompt provided. Look at all context to make sure you are answering with the correct information. 
 I require all responses to explain every part of the response in depth and entirely. All sections of the response must be explained in at least 3 sentences.
-If a prompt is provided without proper context, look at previous messages for needed context."""
+If a prompt is provided without proper context, look at previous messages for needed context. If providing costs, phrase it as "___ dollars" instead of "$__" (eg: "30 dollars")"""
 
 def get_system_prompt(mode, has_search_results=False):
     """Get the system prompt for the specified mode"""
